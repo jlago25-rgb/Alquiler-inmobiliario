@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#f1f5f9"/>
+  <!-- Interior executive office -->
+  <rect x="70" y="55" width="660" height="300" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="115" y="90" width="380" height="175" fill="#dbeafe" stroke="#132a46" stroke-width="4"/>
+  <line x1="305" y1="90" x2="305" y2="265" stroke="#132a46" stroke-width="3"/>
+  <rect y="355" width="800" height="145" fill="#e2e8f0"/>
+  <!-- Desk -->
+  <rect x="210" y="305" width="320" height="20" rx="4" fill="#132a46"/>
+  <rect x="235" y="325" width="20" height="80" fill="#334155"/>
+  <rect x="485" y="325" width="20" height="80" fill="#334155"/>
+  <!-- Monitor -->
+  <rect x="325" y="255" width="90" height="50" rx="4" fill="#1b7a6e"/>
+</svg>

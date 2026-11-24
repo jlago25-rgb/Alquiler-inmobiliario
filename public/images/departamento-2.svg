@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#f1f5f9"/>
+  <rect y="400" width="800" height="100" fill="#94a3b8"/>
+  <!-- Side buildings -->
+  <rect x="85" y="175" width="150" height="235" fill="#cbd5e1"/>
+  <rect x="565" y="150" width="150" height="260" fill="#cbd5e1"/>
+  <!-- Main modern condo -->
+  <rect x="245" y="70" width="310" height="340" rx="6" fill="#132a46"/>
+  <rect x="265" y="95" width="270" height="245" rx="4" fill="#f8fafc"/>
+  <g fill="#38bdf8" opacity="0.85">
+    <rect x="285" y="112" width="230" height="36" rx="3"/>
+    <rect x="285" y="166" width="230" height="36" rx="3"/>
+    <rect x="285" y="220" width="230" height="36" rx="3"/>
+    <rect x="285" y="274" width="230" height="36" rx="3"/>
+  </g>
+  <rect x="345" y="348" width="110" height="62" fill="#1b7a6e"/>
+</svg>

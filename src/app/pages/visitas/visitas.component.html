@@ -1,0 +1,316 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gestión de Visitas</h1>
+      <p class="page-subtitle">
+        Programe, reprograme o cancele citas evitando conflictos de horario en el mismo inmueble, y consulte el historial por propiedad o cliente.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" (click)="abrirProgramar()">+ Programar visita</button>
+    </div>
+  </div>
+
+  <!-- Resumen de visitas filtradas -->
+  <section class="mini-kpi-row">
+    <div class="mini-kpi">
+      <span>Total mostradas</span>
+      <strong>{{ resumenEstados().total }}</strong>
+    </div>
+    <div class="mini-kpi kpi-blue">
+      <span>Activas (Programadas / Reprog.)</span>
+      <strong>{{ resumenEstados().activas }}</strong>
+    </div>
+    <div class="mini-kpi kpi-teal">
+      <span>Realizadas</span>
+      <strong>{{ resumenEstados().realizadas }}</strong>
+    </div>
+    <div class="mini-kpi kpi-red">
+      <span>Canceladas</span>
+      <strong>{{ resumenEstados().canceladas }}</strong>
+    </div>
+  </section>
+
+  <!-- Filtros de historial -->
+  <section class="card filters-row">
+    <div class="form-group">
+      <label class="form-label" for="v-inm">Historial por inmueble</label>
+      <select
+        id="v-inm"
+        class="form-control"
+        [ngModel]="filtroInmuebleId()"
+        (ngModelChange)="filtroInmuebleId.set($event)"
+      >
+        <option value="">Todos los inmuebles</option>
+        @for (inm of service.inmuebles(); track inm.id) {
+          <option [value]="inm.id">{{ inm.referencia }} · {{ inm.titulo }} ({{ inm.ciudad }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="v-cli">Historial por cliente</label>
+      <select
+        id="v-cli"
+        class="form-control"
+        [ngModel]="filtroClienteId()"
+        (ngModelChange)="filtroClienteId.set($event)"
+      >
+        <option value="">Todos los clientes</option>
+        @for (cli of service.clientes(); track cli.id) {
+          <option [value]="cli.id">{{ cli.nombreCompleto }} ({{ cli.identificacion }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="v-est">Estado</label>
+      <select
+        id="v-est"
+        class="form-control"
+        [ngModel]="filtroEstado()"
+        (ngModelChange)="filtroEstado.set($event)"
+      >
+        <option value="">Todos los estados</option>
+        @for (est of estados; track est) {
+          <option [value]="est">{{ est }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group" style="justify-content: flex-end;">
+      <button type="button" class="btn btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+  </section>
+
+  <!-- Tabla de visitas -->
+  @if (visitasFiltradas().length > 0) {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fecha y hora</th>
+            <th>Inmueble</th>
+            <th>Cliente interesado</th>
+            <th>Estado</th>
+            <th>Impresión / Observaciones</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of visitasFiltradas(); track v.id) {
+            <tr>
+              <td>
+                <strong>{{ v.fecha }}</strong>
+                <div class="sub-text">{{ v.hora }} h</div>
+              </td>
+              <td>
+                @if (obtenerInmueble(v.inmuebleId); as inm) {
+                  <a [routerLink]="['/catalogo', inm.id]" class="prop-link">
+                    <span class="mono">{{ inm.referencia }}</span> · {{ inm.titulo }}
+                  </a>
+                  <div class="sub-text">{{ inm.ciudad }} · {{ inm.zona }}</div>
+                } @else {
+                  <span>Inmueble no disponible</span>
+                }
+              </td>
+              <td>
+                @if (obtenerCliente(v.clienteId); as cli) {
+                  <strong>{{ cli.nombreCompleto }}</strong>
+                  <div class="sub-text">{{ cli.telefono }} · {{ cli.email }}</div>
+                }
+              </td>
+              <td>
+                <span class="badge" [class]="claseEstado(v.estado)">{{ v.estado }}</span>
+              </td>
+              <td class="comment-cell">{{ v.comentario || 'Sin observaciones.' }}</td>
+              <td>
+                <div class="table-actions">
+                  @if (v.estaActiva) {
+                    <button type="button" class="btn btn-accent btn-sm" (click)="abrirMarcarRealizada(v)">
+                      Realizada
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="abrirReprogramar(v)">
+                      Reprogramar
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" style="color: var(--red-600);" (click)="abrirCancelar(v)">
+                      Cancelar
+                    </button>
+                  } @else {
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="abrirReprogramar(v)">
+                      Reactivar
+                    </button>
+                  }
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="visitaEliminar.set(v)" title="Eliminar registro">
+                    ✕
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <h3>Sin visitas registradas para este filtro</h3>
+      <p>Ajuste el selector de inmueble, cliente o estado, o programe una nueva visita.</p>
+      <button type="button" class="btn btn-primary" (click)="abrirProgramar()">Programar visita</button>
+    </div>
+  }
+</div>
+
+<!-- Modal Programar Visita -->
+@if (modalProgramar()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Programar visita">
+    <div class="modal-panel" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>Programar nueva visita</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="modalProgramar.set(false)">✕</button>
+      </div>
+      <form [formGroup]="formNueva" (ngSubmit)="guardarNuevaVisita()" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label" for="nv-inm">Inmueble <span class="required">*</span></label>
+            <select id="nv-inm" class="form-control" formControlName="inmuebleId">
+              <option value="">Seleccione un inmueble...</option>
+              @for (inm of service.inmuebles(); track inm.id) {
+                <option [value]="inm.id">{{ inm.referencia }} · {{ inm.titulo }} ({{ inm.ciudad }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="nv-cli">Cliente interesado <span class="required">*</span></label>
+            <select id="nv-cli" class="form-control" formControlName="clienteId">
+              <option value="">Seleccione un cliente...</option>
+              @for (cli of service.clientes(); track cli.id) {
+                <option [value]="cli.id">{{ cli.nombreCompleto }} · Tel. {{ cli.telefono }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="nv-fecha">Fecha <span class="required">*</span></label>
+            <input id="nv-fecha" type="date" class="form-control" formControlName="fecha" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="nv-hora">Hora <span class="required">*</span></label>
+            <input id="nv-hora" type="time" class="form-control" formControlName="hora" />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="nv-com">Observación / Nota inicial</label>
+            <textarea id="nv-com" rows="2" class="form-control" formControlName="comentario" placeholder="Ej. Interesado en financiamiento, revisar terraza..."></textarea>
+            <span class="form-hint">El sistema bloqueará automáticamente si ya existe otra visita activa para este inmueble en la misma fecha y hora.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="modalProgramar.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Confirmar cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Reprogramar -->
+@if (visitaReprogramar(); as vr) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Reprogramar visita">
+    <div class="modal-panel modal-sm">
+      <div class="modal-header">
+        <h3>Reprogramar visita</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="visitaReprogramar.set(null)">✕</button>
+      </div>
+      <form [formGroup]="formReprogramar" (ngSubmit)="confirmarReprogramar()" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="rp-fecha">Nueva fecha <span class="required">*</span></label>
+            <input id="rp-fecha" type="date" class="form-control" formControlName="fecha" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rp-hora">Nueva hora <span class="required">*</span></label>
+            <input id="rp-hora" type="time" class="form-control" formControlName="hora" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="rp-com">Observación</label>
+            <textarea id="rp-com" rows="2" class="form-control" formControlName="comentario"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="visitaReprogramar.set(null)">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Guardar nueva fecha</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Marcar Realizada -->
+@if (visitaCompletar(); as vc) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Registrar impresión de visita">
+    <div class="modal-panel modal-sm">
+      <div class="modal-header">
+        <h3>Registrar visita realizada</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="visitaCompletar.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="imp-txt">Impresión y comentarios del cliente</label>
+          <textarea
+            id="imp-txt"
+            rows="3"
+            class="form-control"
+            placeholder="Ej. Le agradó la distribución; solicitará crédito hipotecario."
+            [ngModel]="impresionTexto()"
+            (ngModelChange)="impresionTexto.set($event)"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="visitaCompletar.set(null)">Cancelar</button>
+        <button type="button" class="btn btn-accent" (click)="confirmarRealizada()">Marcar como realizada</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Cancelar Visita -->
+@if (visitaCancelar(); as vx) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Cancelar visita">
+    <div class="modal-panel modal-sm">
+      <div class="modal-header">
+        <h3>Cancelar visita</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="visitaCancelar.set(null)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="can-motivo">Motivo de cancelación (opcional)</label>
+          <textarea
+            id="can-motivo"
+            rows="2"
+            class="form-control"
+            placeholder="Ej. Cliente reprogramará próxima semana"
+            [ngModel]="motivoCancelacion()"
+            (ngModelChange)="motivoCancelacion.set($event)"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="visitaCancelar.set(null)">Volver</button>
+        <button type="button" class="btn btn-danger" (click)="confirmarCancelar()">Confirmar cancelación</button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="visitaEliminar() !== null"
+  titulo="Eliminar registro de visita"
+  mensaje="¿Desea eliminar permanentemente esta visita del historial?"
+  textoConfirmar="Eliminar"
+  (confirmar)="confirmarEliminar()"
+  (cancelar)="visitaEliminar.set(null)"
+/>

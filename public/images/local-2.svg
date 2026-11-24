@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#eef2ff"/>
+  <rect y="385" width="800" height="115" fill="#94a3b8"/>
+  <!-- Shopping plaza local -->
+  <rect x="115" y="125" width="570" height="265" rx="8" fill="#1e293b"/>
+  <rect x="135" y="145" width="530" height="245" rx="4" fill="#f8fafc"/>
+  <rect x="135" y="145" width="530" height="50" fill="#2b6cb0"/>
+  <!-- Three wide entrances -->
+  <rect x="160" y="215" width="145" height="175" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>
+  <rect x="328" y="215" width="145" height="175" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>
+  <rect x="496" y="215" width="145" height="175" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>
+</svg>

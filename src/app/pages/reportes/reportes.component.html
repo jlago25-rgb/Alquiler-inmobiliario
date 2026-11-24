@@ -1,0 +1,158 @@
+<div class="page-container">
+  <div class="page-header no-print">
+    <div>
+      <h1 class="page-title">Reportes y Fichas Imprimibles</h1>
+      <p class="page-subtitle">
+        Genere resúmenes filtrables del portafolio inmobiliario, exporte datos en CSV/JSON o abra la ficha técnica imprimible de cada inmueble.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="exportarCSV()">Exportar CSV</button>
+      <button type="button" class="btn btn-secondary" (click)="exportarJSON()">Respaldo JSON</button>
+      <button type="button" class="btn btn-primary" (click)="imprimirResumen()">Imprimir resumen</button>
+    </div>
+  </div>
+
+  <!-- Encabezado visible solo en impresión -->
+  <div class="print-only-header">
+    <h2>INMOGESTIÓN 360 · RESUMEN DE PORTAFOLIO INMOBILIARIO</h2>
+    <p>Fecha de generación: {{ fechaGeneracion }} · Registros incluidos: {{ totales().cantidad }}</p>
+  </div>
+
+  <!-- Filtros del reporte (no-print) -->
+  <section class="card report-filters no-print">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label" for="r-ciu">Ciudad</label>
+        <select id="r-ciu" class="form-control" [ngModel]="ciudad()" (ngModelChange)="ciudad.set($event)">
+          <option value="">Todas</option>
+          @for (c of service.ciudadesDisponibles(); track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="r-tipo">Tipo</label>
+        <select id="r-tipo" class="form-control" [ngModel]="tipo()" (ngModelChange)="tipo.set($event)">
+          <option value="">Todos</option>
+          @for (t of tipos; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="r-mod">Modalidad</label>
+        <select id="r-mod" class="form-control" [ngModel]="modalidad()" (ngModelChange)="modalidad.set($event)">
+          <option value="">Todas</option>
+          @for (m of modalidades; track m) {
+            <option [value]="m">{{ m }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="r-disp">Disponibilidad</label>
+        <select id="r-disp" class="form-control" [ngModel]="disponibilidad()" (ngModelChange)="disponibilidad.set($event)">
+          <option value="">Todos los estados</option>
+          @for (e of estados; track e) {
+            <option [value]="e">{{ e }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="r-ofi">Oficina</label>
+        <select id="r-ofi" class="form-control" [ngModel]="oficinaId()" (ngModelChange)="oficinaId.set($event)">
+          <option value="">Todas</option>
+          @for (o of service.oficinas(); track o.id) {
+            <option [value]="o.id">{{ o.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" (click)="limpiar()">Limpiar filtros</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Totales del resumen -->
+  <section class="summary-strip">
+    <div class="summary-box">
+      <span>Inmuebles en resumen</span>
+      <strong>{{ totales().cantidad }}</strong>
+    </div>
+    <div class="summary-box">
+      <span>Superficie acumulada</span>
+      <strong>{{ totales().superficieTotal }} m²</strong>
+    </div>
+    <div class="summary-box">
+      <span>Promedio venta</span>
+      <strong class="price-text">{{ totales().promedioVenta | precioEc }}</strong>
+    </div>
+    <div class="summary-box">
+      <span>Promedio alquiler</span>
+      <strong class="price-text">{{ totales().promedioAlquiler | precioEc:'/mes' }}</strong>
+    </div>
+  </section>
+
+  <!-- Tabla de resumen -->
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Referencia</th>
+          <th>Inmueble</th>
+          <th>Tipo</th>
+          <th>Ubicación</th>
+          <th>m²</th>
+          <th>Modalidad</th>
+          <th>Venta / Alquiler</th>
+          <th>Propietario</th>
+          <th>Oficina / Llaves</th>
+          <th>Estado</th>
+          <th class="no-print">Ficha</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (inm of inmueblesResumen(); track inm.id) {
+          <tr>
+            <td class="mono"><strong>{{ inm.referencia }}</strong></td>
+            <td>{{ inm.titulo }}</td>
+            <td>{{ inm.tipo }}</td>
+            <td>{{ inm.ciudad }} ({{ inm.zona }})</td>
+            <td>{{ inm.superficieM2 }}</td>
+            <td>{{ inm.modalidad }}</td>
+            <td>
+              @if (inm.precioVenta !== null) {
+                <div class="price-text">{{ inm.precioVenta | precioEc }}</div>
+              }
+              @if (inm.precioAlquiler !== null) {
+                <div style="font-size: 0.8rem;">{{ inm.precioAlquiler | precioEc:'/mes' }}</div>
+              }
+            </td>
+            <td>{{ nombrePropietario(inm.propietarioId) }}</td>
+            <td>
+              <div style="font-size: 0.82rem;">{{ nombreOficina(inm.oficinaResponsableId) }}</div>
+              <small style="color: var(--slate-500);">Llaves: {{ nombreOficina(inm.oficinaLlavesId) }}</small>
+            </td>
+            <td>{{ inm.disponibilidad }}</td>
+            <td class="no-print">
+              <a [routerLink]="['/reportes/ficha', inm.id]" class="btn btn-primary btn-sm">
+                Abrir ficha
+              </a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="11" style="text-align: center; padding: 2rem; color: var(--slate-500);">
+              No hay registros que coincidan con los filtros seleccionados.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

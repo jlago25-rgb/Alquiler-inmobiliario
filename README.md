@@ -1,59 +1,42 @@
-# P1H1AngularMoviliarios
+# InmoGestión 360 · Plataforma de Gestión Inmobiliaria (Angular 22)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
+Prototipo funcional web responsive desarrollado en **Angular 22** con componentes standalone, Signals, formularios reactivos y persistencia local (`localStorage`), diseñado para centralizar la gestión de inmuebles, oficinas, propietarios, clientes, visitas, reportes y analítica en tiempo real.
 
-## Development server
+## Requisitos previos
 
-To start a local development server, run:
+- **Node.js** >= 20
+- **npm** >= 10
+- **Angular CLI** 22 (`@angular/cli`)
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Instalación y ejecución
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Abrir en el navegador: `http://localhost:4200`
+
+## Compilación y pruebas unitarias
 
 ```bash
-ng generate --help
+npm run build
+npm test
 ```
 
-## Building
+## Módulos y rutas principales
 
-To build the project run:
+| Ruta | Descripción |
+| :--- | :--- |
+| `/dashboard` | Indicadores KPI dinámicos, 3 gráficos interactivos (por tipo, por ciudad y visitas por estado), indicadores por oficina y próximas visitas. |
+| `/catalogo` | Catálogo visual en **tarjetas y tabla**, búsqueda textual, ordenamiento, paginación, filtros avanzados combinables, casos rápidos de demostración, favoritos y filtros guardados. |
+| `/catalogo/:id` | Vista detallada con galería de imágenes (con imagen alternativa automática si falla una URL), características particulares, oficina responsable, ubicación de llaves e historial de visitas. |
+| `/mantenimiento` | Administración CRUD completa de **Inmuebles**, **Propietarios**, **Oficinas** y **Clientes** con validaciones obligatorias, numéricas y condicionales, confirmación previa y control de integridad referencial. |
+| `/visitas` | Programación, reprogramación, registro de impresión/realización y cancelación de visitas, con bloqueo de conflictos de horario en un mismo inmueble e historial por inmueble y cliente. |
+| `/reportes` | Resumen filtrable del portafolio con impresión directa, exportación a **CSV** y respaldo completo en **JSON**. |
+| `/reportes/ficha/:id` | Ficha técnica imprimible por inmueble con fotografías, características, propietario, oficina/llaves y registro de visitas. |
+| `/**` | Gestión amigable de rutas inexistentes (404). |
 
-```bash
-ng build
-```
+## Documentación técnica y diagrama UML
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+El análisis completo del dominio, el **diagrama de clases UML**, las decisiones de arquitectura y la guía para demostrar los casos de consulta se encuentran en [`docs/DOCUMENTACION_TECNICA.md`](docs/DOCUMENTACION_TECNICA.md).

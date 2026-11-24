@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#f8fafc"/>
+  <rect y="345" width="800" height="155" fill="#e2e8f0"/>
+  <!-- Living room window -->
+  <rect x="140" y="75" width="520" height="180" rx="4" fill="#dbeafe" stroke="#132a46" stroke-width="4"/>
+  <line x1="400" y1="75" x2="400" y2="255" stroke="#132a46" stroke-width="3"/>
+  <!-- Sofa -->
+  <rect x="195" y="295" width="410" height="90" rx="16" fill="#1b7a6e"/>
+  <rect x="175" y="325" width="40" height="75" rx="8" fill="#134e4a"/>
+  <rect x="585" y="325" width="40" height="75" rx="8" fill="#134e4a"/>
+  <!-- Coffee table -->
+  <rect x="290" y="410" width="220" height="18" rx="4" fill="#132a46"/>
+</svg>

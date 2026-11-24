@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#f8fafc"/>
+  <rect y="385" width="800" height="115" fill="#cbd5e1"/>
+  <!-- Commercial storefront -->
+  <rect x="130" y="135" width="540" height="255" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <rect x="118" y="122" width="564" height="58" rx="6" fill="#132a46"/>
+  <!-- Awning -->
+  <path d="M130,180 L670,180 L690,224 L110,224 Z" fill="#1b7a6e"/>
+  <g fill="#ffffff" opacity="0.22">
+    <rect x="175" y="180" width="55" height="44"/>
+    <rect x="290" y="180" width="55" height="44"/>
+    <rect x="405" y="180" width="55" height="44"/>
+    <rect x="520" y="180" width="55" height="44"/>
+  </g>
+  <!-- Display windows -->
+  <rect x="160" y="245" width="185" height="145" rx="4" fill="#bae6fd" stroke="#132a46" stroke-width="3"/>
+  <rect x="365" y="255" width="75" height="135" rx="3" fill="#1e3a5f"/>
+  <rect x="460" y="245" width="185" height="145" rx="4" fill="#bae6fd" stroke="#132a46" stroke-width="3"/>
+</svg>

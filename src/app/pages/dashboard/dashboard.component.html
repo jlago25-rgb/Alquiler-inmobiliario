@@ -1,0 +1,242 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard Inmobiliario</h1>
+      <p class="page-subtitle">
+        Indicadores operativos en tiempo real de InmoGestión 360. Se actualizan automáticamente al registrar, modificar o eliminar registros.
+      </p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/catalogo" class="btn btn-secondary">Explorar catálogo</a>
+      <a routerLink="/mantenimiento" class="btn btn-primary">+ Gestionar inmuebles</a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <section class="kpi-grid" aria-label="Indicadores principales">
+    <article class="kpi-card">
+      <span class="kpi-label">Total inmuebles</span>
+      <strong class="kpi-value">{{ metricas().totalInmuebles }}</strong>
+      <span class="kpi-meta">{{ metricas().favoritos }} marcados como favoritos</span>
+    </article>
+
+    <article class="kpi-card kpi-teal">
+      <span class="kpi-label">Disponibles</span>
+      <strong class="kpi-value">{{ metricas().disponibles }}</strong>
+      <span class="kpi-meta">Listos para operación inmediata</span>
+    </article>
+
+    <article class="kpi-card kpi-blue">
+      <span class="kpi-label">En venta</span>
+      <strong class="kpi-value">{{ metricas().enVenta }}</strong>
+      <span class="kpi-meta">Incluye {{ metricas().ambasModalidades }} en ambas modalidades</span>
+    </article>
+
+    <article class="kpi-card kpi-indigo">
+      <span class="kpi-label">En alquiler</span>
+      <strong class="kpi-value">{{ metricas().enAlquiler }}</strong>
+      <span class="kpi-meta">Canon mensual activo o dual</span>
+    </article>
+
+    <article class="kpi-card kpi-amber">
+      <span class="kpi-label">Visitas registradas</span>
+      <strong class="kpi-value">{{ metricas().totalVisitas }}</strong>
+      <span class="kpi-meta">
+        {{ metricas().visitasProgramadas }} activas · {{ metricas().visitasRealizadas }} realizadas
+      </span>
+    </article>
+  </section>
+
+  <!-- Charts Grid (RF-08: Al menos 3 gráficos dinámicos) -->
+  <section class="charts-grid" aria-label="Gráficos estadísticos">
+    <!-- Gráfico 1: Distribución por tipo -->
+    <article class="card chart-card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Distribución por tipo</h2>
+          <p class="chart-subtitle">Cantidad de propiedades según categoría</p>
+        </div>
+        <span class="badge badge-programada">{{ metricas().totalInmuebles }} total</span>
+      </div>
+
+      <div class="bar-chart" role="img" aria-label="Gráfico de barras de inmuebles por tipo">
+        @for (item of metricas().porTipo; track item.etiqueta) {
+          <div class="bar-col">
+            <span class="bar-val">{{ item.valor }}</span>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                [style.height.%]="alturaBarra(item, maxTipo())"
+                [style.background]="item.color"
+                [title]="item.etiqueta + ': ' + item.valor + ' (' + item.porcentaje + '%)'"
+              ></div>
+            </div>
+            <span class="bar-label">{{ item.etiqueta }}</span>
+          </div>
+        }
+      </div>
+    </article>
+
+    <!-- Gráfico 2: Inmuebles por ciudad -->
+    <article class="card chart-card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Inmuebles por ciudad</h2>
+          <p class="chart-subtitle">Cobertura territorial en cantones del Ecuador</p>
+        </div>
+        <span class="badge badge-disponible">{{ metricas().porCiudad.length }} ciudades</span>
+      </div>
+
+      @if (metricas().porCiudad.length > 0) {
+        <div class="bar-chart" role="img" aria-label="Gráfico de barras de inmuebles por ciudad">
+          @for (item of metricas().porCiudad; track item.etiqueta) {
+            <div class="bar-col">
+              <span class="bar-val">{{ item.valor }}</span>
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [style.height.%]="alturaBarra(item, maxCiudad())"
+                  [style.background]="'#1b7a6e'"
+                  [title]="item.etiqueta + ': ' + item.valor + ' (' + item.porcentaje + '%)'"
+                ></div>
+              </div>
+              <span class="bar-label">{{ item.etiqueta }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-inline">Sin inmuebles registrados.</div>
+      }
+    </article>
+
+    <!-- Gráfico 3: Visitas por estado -->
+    <article class="card chart-card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Visitas por estado</h2>
+          <p class="chart-subtitle">Seguimiento comercial de citas agendadas</p>
+        </div>
+        <a routerLink="/visitas" class="btn btn-ghost btn-sm">Ver agenda →</a>
+      </div>
+
+      <div class="donut-layout">
+        <svg class="donut-svg" viewBox="0 0 140 140" role="img" aria-label="Gráfico circular de visitas por estado">
+          <circle cx="70" cy="70" r="52" fill="none" stroke="#e2e8f0" stroke-width="18" />
+          @for (seg of segmentosVisitas(); track seg.etiqueta) {
+            @if (seg.valor > 0) {
+              <circle
+                cx="70"
+                cy="70"
+                r="52"
+                fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="18"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+                transform="rotate(-90 70 70)"
+              />
+            }
+          }
+          <text x="70" y="67" text-anchor="middle" class="donut-total">{{ metricas().totalVisitas }}</text>
+          <text x="70" y="84" text-anchor="middle" class="donut-caption">visitas</text>
+        </svg>
+
+        <ul class="donut-legend">
+          @for (item of metricas().visitasPorEstado; track item.etiqueta) {
+            <li>
+              <span class="legend-dot" [style.background]="item.color"></span>
+              <span class="legend-name">{{ item.etiqueta }}</span>
+              <strong class="legend-val">{{ item.valor }}</strong>
+              <span class="legend-pct">({{ item.porcentaje }}%)</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <!-- Bottom Row: Indicadores por Oficina (Bonus) + Próximas Visitas -->
+  <section class="lower-grid">
+    <article class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Indicadores por oficina</h2>
+          <p class="chart-subtitle">Propiedades gestionadas y control de custodia de llaves</p>
+        </div>
+        <a routerLink="/mantenimiento" [queryParams]="{ tab: 'oficinas' }" class="btn btn-ghost btn-sm">
+          Administrar →
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Oficina</th>
+              <th>Ciudad</th>
+              <th>Responsable de</th>
+              <th>Disponibles</th>
+              <th>Custodia llaves</th>
+              <th>Visitas activas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ofi of metricas().porOficina; track ofi.oficinaId) {
+              <tr>
+                <td><strong>{{ ofi.nombre }}</strong></td>
+                <td>{{ ofi.ciudad }}</td>
+                <td>{{ ofi.inmueblesResponsable }}</td>
+                <td><span class="badge badge-disponible">{{ ofi.disponibles }}</span></td>
+                <td>{{ ofi.custodiaLlaves }}</td>
+                <td>{{ ofi.visitasActivas }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--slate-500);">
+                  No hay oficinas registradas.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Próximas visitas activas</h2>
+          <p class="chart-subtitle">Agenda inmediata por inmueble y cliente</p>
+        </div>
+        <a routerLink="/visitas" class="btn btn-ghost btn-sm">Gestionar →</a>
+      </div>
+
+      @if (proximasVisitas().length > 0) {
+        <ul class="visits-mini-list">
+          @for (item of proximasVisitas(); track item.visita.id) {
+            <li>
+              <div class="visit-date-pill">
+                <strong>{{ item.visita.fecha }}</strong>
+                <span>{{ item.visita.hora }}</span>
+              </div>
+              <div class="visit-info">
+                <a [routerLink]="['/catalogo', item.visita.inmuebleId]" class="visit-prop-link">
+                  {{ item.inmueble?.referencia }} · {{ item.inmueble?.titulo ?? 'Inmueble' }}
+                </a>
+                <div class="visit-meta">
+                  Cliente: <strong>{{ item.cliente?.nombreCompleto ?? '—' }}</strong>
+                  · <span class="badge" [class]="'badge-' + item.visita.estado.toLowerCase()">{{ item.visita.estado }}</span>
+                </div>
+                @if (item.visita.comentario) {
+                  <p class="visit-note">{{ item.visita.comentario }}</p>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="empty-inline">No existen visitas programadas actualmente.</div>
+      }
+    </article>
+  </section>
+</div>

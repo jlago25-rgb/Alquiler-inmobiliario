@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#f0f9ff"/>
+    </linearGradient>
+    <linearGradient id="lawn1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a7f3d0"/>
+      <stop offset="100%" stop-color="#6ee7b7"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#sky1)"/>
+  <circle cx="670" cy="95" r="42" fill="#fde68a" opacity="0.85"/>
+  <rect y="365" width="800" height="135" fill="url(#lawn1)"/>
+  <ellipse cx="140" cy="340" rx="58" ry="62" fill="#34d399"/>
+  <rect x="132" y="360" width="16" height="45" fill="#78350f"/>
+  <ellipse cx="675" cy="345" rx="46" ry="52" fill="#10b981"/>
+  <rect x="669" y="360" width="12" height="42" fill="#78350f"/>
+  <!-- Main modern house -->
+  <rect x="210" y="210" width="380" height="170" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <polygon points="185,215 400,105 615,215" fill="#132a46"/>
+  <polygon points="210,215 400,122 590,215" fill="#1e3a5f"/>
+  <rect x="495" y="130" width="32" height="65" fill="#334155"/>
+  <!-- Door -->
+  <rect x="368" y="295" width="64" height="85" rx="4" fill="#1b7a6e"/>
+  <circle cx="422" cy="340" r="4" fill="#fde68a"/>
+  <!-- Windows -->
+  <rect x="245" y="242" width="88" height="64" rx="4" fill="#bfdbfe" stroke="#1e3a5f" stroke-width="3"/>
+  <line x1="289" y1="242" x2="289" y2="306" stroke="#1e3a5f" stroke-width="2"/>
+  <line x1="245" y1="274" x2="333" y2="274" stroke="#1e3a5f" stroke-width="2"/>
+  <rect x="467" y="242" width="88" height="64" rx="4" fill="#bfdbfe" stroke="#1e3a5f" stroke-width="3"/>
+  <line x1="511" y1="242" x2="511" y2="306" stroke="#1e3a5f" stroke-width="2"/>
+  <line x1="467" y1="274" x2="555" y2="274" stroke="#1e3a5f" stroke-width="2"/>
+  <!-- Path -->
+  <polygon points="365,380 435,380 475,500 325,500" fill="#e2e8f0"/>
+</svg>

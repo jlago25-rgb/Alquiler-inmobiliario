@@ -1,0 +1,745 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Administración y Mantenimiento</h1>
+      <p class="page-subtitle">
+        Gestión integral CRUD de inmuebles, propietarios, oficinas y clientes con control de integridad referencial.
+      </p>
+    </div>
+    <div class="header-actions">
+      @if (tabActiva() === 'inmuebles') {
+        <button type="button" class="btn btn-primary" (click)="abrirNuevoInmueble()">+ Registrar inmueble</button>
+      } @else if (tabActiva() === 'propietarios') {
+        <button type="button" class="btn btn-primary" (click)="abrirNuevoPropietario()">+ Registrar propietario</button>
+      } @else if (tabActiva() === 'oficinas') {
+        <button type="button" class="btn btn-primary" (click)="abrirNuevaOficina()">+ Registrar oficina</button>
+      } @else {
+        <button type="button" class="btn btn-primary" (click)="abrirNuevoCliente()">+ Registrar cliente</button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar" role="tablist">
+    <button type="button" role="tab" class="tab-btn" [class.active]="tabActiva() === 'inmuebles'" (click)="cambiarTab('inmuebles')">
+      Inmuebles <span class="tab-count">{{ service.inmuebles().length }}</span>
+    </button>
+    <button type="button" role="tab" class="tab-btn" [class.active]="tabActiva() === 'propietarios'" (click)="cambiarTab('propietarios')">
+      Propietarios <span class="tab-count">{{ service.propietarios().length }}</span>
+    </button>
+    <button type="button" role="tab" class="tab-btn" [class.active]="tabActiva() === 'oficinas'" (click)="cambiarTab('oficinas')">
+      Oficinas <span class="tab-count">{{ service.oficinas().length }}</span>
+    </button>
+    <button type="button" role="tab" class="tab-btn" [class.active]="tabActiva() === 'clientes'" (click)="cambiarTab('clientes')">
+      Clientes <span class="tab-count">{{ service.clientes().length }}</span>
+    </button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="card search-bar-card">
+    <input
+      type="search"
+      class="form-control"
+      placeholder="Filtrar registros en la pestaña actual..."
+      [ngModel]="busqueda()"
+      (ngModelChange)="busqueda.set($event)"
+      aria-label="Filtrar registros"
+    />
+  </div>
+
+  <!-- ==================== TAB INMUEBLES ==================== -->
+  @if (tabActiva() === 'inmuebles') {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ref.</th>
+            <th>Inmueble</th>
+            <th>Tipo / m²</th>
+            <th>Ciudad / Zona</th>
+            <th>Modalidad / Precios</th>
+            <th>Propietario</th>
+            <th>Oficina / Llaves</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inm of inmueblesFiltrados(); track inm.id) {
+            <tr>
+              <td class="mono"><strong>{{ inm.referencia }}</strong></td>
+              <td>
+                <a [routerLink]="['/catalogo', inm.id]" class="row-link">{{ inm.titulo }}</a>
+                <div class="row-sub">{{ inm.direccion }}</div>
+              </td>
+              <td>
+                <div>{{ inm.tipo }}</div>
+                <small class="row-sub">{{ inm.superficieM2 }} m²</small>
+              </td>
+              <td>
+                <div>{{ inm.ciudad }}</div>
+                <small class="row-sub">{{ inm.zona }}</small>
+              </td>
+              <td>
+                <span class="badge" [class]="'badge-' + inm.modalidad.toLowerCase()">{{ inm.modalidad }}</span>
+                <div style="margin-top: 0.2rem;">
+                  @if (inm.precioVenta !== null) {
+                    <div class="price-text">{{ inm.precioVenta | precioEc }}</div>
+                  }
+                  @if (inm.precioAlquiler !== null) {
+                    <div class="price-text" style="font-size: 0.8rem;">{{ inm.precioAlquiler | precioEc:'/mes' }}</div>
+                  }
+                </div>
+              </td>
+              <td>{{ nombrePropietario(inm.propietarioId) }}</td>
+              <td>
+                <div style="font-size: 0.82rem;">{{ nombreOficina(inm.oficinaResponsableId) }}</div>
+                <div class="row-sub">Llaves: {{ nombreOficina(inm.oficinaLlavesId) }}</div>
+              </td>
+              <td>
+                <span class="badge" [class]="'badge-' + inm.disponibilidad.toLowerCase().replace(' ', '-')">
+                  {{ inm.disponibilidad }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="abrirEditarInmueble(inm)">Editar</button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    (click)="solicitarEliminar('inmuebles', inm.id, inm.referencia + ' - ' + inm.titulo)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="empty-td">No existen inmuebles que coincidan con el criterio.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ==================== TAB PROPIETARIOS ==================== -->
+  @if (tabActiva() === 'propietarios') {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Identificación</th>
+            <th>Nombre completo</th>
+            <th>Teléfono</th>
+            <th>Correo electrónico</th>
+            <th>Dirección</th>
+            <th>Inmuebles</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of propietariosFiltrados(); track p.id) {
+            <tr>
+              <td class="mono">{{ p.identificacion }}</td>
+              <td><strong>{{ p.nombreCompleto }}</strong></td>
+              <td>{{ p.telefono }}</td>
+              <td>{{ p.email }}</td>
+              <td>{{ p.direccion }}</td>
+              <td>
+                <span class="badge badge-programada">{{ contarInmueblesPropietario(p.id) }}</span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="abrirEditarPropietario(p)">Editar</button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    (click)="solicitarEliminar('propietarios', p.id, p.nombreCompleto)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-td">No se encontraron propietarios.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ==================== TAB OFICINAS ==================== -->
+  @if (tabActiva() === 'oficinas') {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Oficina</th>
+            <th>Ciudad / Cantón</th>
+            <th>Encargado</th>
+            <th>Contacto</th>
+            <th>Inmuebles / Llaves</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of oficinasFiltradas(); track o.id) {
+            <tr>
+              <td class="mono"><strong>{{ o.codigo }}</strong></td>
+              <td>
+                <strong>{{ o.nombre }}</strong>
+                <div class="row-sub">{{ o.direccion }}</div>
+              </td>
+              <td>{{ o.ciudad }} / {{ o.canton }}</td>
+              <td>{{ o.encargado }}</td>
+              <td>
+                <div>{{ o.telefono }}</div>
+                <small class="row-sub">{{ o.email }}</small>
+              </td>
+              <td>
+                <span class="badge badge-programada">{{ contarInmueblesOficina(o.id) }} resp.</span>
+                <span class="badge badge-disponible" style="margin-left: 0.25rem;">{{ contarLlavesOficina(o.id) }} llaves</span>
+              </td>
+              <td>
+                <span class="badge" [class]="o.activa ? 'badge-activa' : 'badge-inactiva'">
+                  {{ o.activa ? 'Activa' : 'Inactiva' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="abrirEditarOficina(o)">Editar</button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    (click)="solicitarEliminar('oficinas', o.id, o.nombre)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty-td">No se encontraron oficinas.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ==================== TAB CLIENTES ==================== -->
+  @if (tabActiva() === 'clientes') {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Identificación</th>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th>Presupuesto máx.</th>
+            <th>Notas</th>
+            <th>Visitas</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clientesFiltrados(); track c.id) {
+            <tr>
+              <td class="mono">{{ c.identificacion }}</td>
+              <td><strong>{{ c.nombreCompleto }}</strong></td>
+              <td>
+                <div>{{ c.telefono }}</div>
+                <small class="row-sub">{{ c.email }}</small>
+              </td>
+              <td class="price-text">{{ c.presupuestoMax | precioEc }}</td>
+              <td>{{ c.notas || '—' }}</td>
+              <td><span class="badge badge-programada">{{ contarVisitasCliente(c.id) }}</span></td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="abrirEditarCliente(c)">Editar</button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    (click)="solicitarEliminar('clientes', c.id, c.nombreCompleto)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-td">No se encontraron clientes.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- ==================== MODAL FORMULARIO INMUEBLE ==================== -->
+@if (modalInmueble()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Formulario de inmueble">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>{{ editandoId() ? 'Editar inmueble' : 'Registrar nuevo inmueble' }}</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="modalInmueble.set(false)" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form [formGroup]="formInmueble" (ngSubmit)="guardarInmueble()" class="modal-body">
+        <h4 class="form-section-title">1. Información general y ubicación</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="inm-ref">Referencia única <span class="required">*</span></label>
+            <input id="inm-ref" type="text" class="form-control" formControlName="referencia" [class.invalid]="esInvalido(formInmueble.controls.referencia)" />
+            @if (esInvalido(formInmueble.controls.referencia)) {
+              <span class="form-error">
+                @if (formInmueble.controls.referencia.hasError('referenciaDuplicada')) {
+                  Esta referencia ya existe en el sistema.
+                } @else {
+                  Ingrese una referencia única (mín. 4 caracteres).
+                }
+              </span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-tipo">Tipo <span class="required">*</span></label>
+            <select id="inm-tipo" class="form-control" formControlName="tipo">
+              @for (t of tipos; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-sup">Superficie (m²) <span class="required">*</span></label>
+            <input id="inm-sup" type="number" min="1" class="form-control" formControlName="superficieM2" [class.invalid]="esInvalido(formInmueble.controls.superficieM2)" />
+            @if (esInvalido(formInmueble.controls.superficieM2)) {
+              <span class="form-error">Debe ser mayor que 0.</span>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="inm-titulo">Título descriptivo <span class="required">*</span></label>
+            <input id="inm-titulo" type="text" class="form-control" formControlName="titulo" [class.invalid]="esInvalido(formInmueble.controls.titulo)" />
+            @if (esInvalido(formInmueble.controls.titulo)) {
+              <span class="form-error">Ingrese un título (mín. 5 caracteres).</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-ciudad">Ciudad <span class="required">*</span></label>
+            <input id="inm-ciudad" type="text" class="form-control" formControlName="ciudad" [class.invalid]="esInvalido(formInmueble.controls.ciudad)" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-canton">Cantón <span class="required">*</span></label>
+            <input id="inm-canton" type="text" class="form-control" formControlName="canton" [class.invalid]="esInvalido(formInmueble.controls.canton)" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-zona">Zona <span class="required">*</span></label>
+            <input id="inm-zona" type="text" class="form-control" formControlName="zona" [class.invalid]="esInvalido(formInmueble.controls.zona)" />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="inm-dir">Dirección exacta <span class="required">*</span></label>
+            <input id="inm-dir" type="text" class="form-control" formControlName="direccion" [class.invalid]="esInvalido(formInmueble.controls.direccion)" />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="inm-desc">Descripción <span class="required">*</span></label>
+            <textarea id="inm-desc" rows="2" class="form-control" formControlName="descripcion" [class.invalid]="esInvalido(formInmueble.controls.descripcion)"></textarea>
+          </div>
+        </div>
+
+        <h4 class="form-section-title">2. Modalidad, precios y disponibilidad</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="inm-mod">Modalidad <span class="required">*</span></label>
+            <select id="inm-mod" class="form-control" formControlName="modalidad">
+              @for (m of modalidades; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-pventa">Precio de venta ($)</label>
+            <input id="inm-pventa" type="number" min="1" class="form-control" formControlName="precioVenta" [class.invalid]="esInvalido(formInmueble.controls.precioVenta)" />
+            @if (esInvalido(formInmueble.controls.precioVenta)) {
+              <span class="form-error">Obligatorio y mayor que 0 para Venta o Ambas.</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-palq">Canon de alquiler ($/mes)</label>
+            <input id="inm-palq" type="number" min="1" class="form-control" formControlName="precioAlquiler" [class.invalid]="esInvalido(formInmueble.controls.precioAlquiler)" />
+            @if (esInvalido(formInmueble.controls.precioAlquiler)) {
+              <span class="form-error">Obligatorio y mayor que 0 para Alquiler o Ambas.</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-disp">Disponibilidad <span class="required">*</span></label>
+            <select id="inm-disp" class="form-control" formControlName="disponibilidad">
+              @for (e of estados; track e) {
+                <option [value]="e">{{ e }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <h4 class="form-section-title">3. Características particulares ({{ formInmueble.controls.tipo.value }})</h4>
+        @if (formInmueble.controls.tipo.value === 'Villa') {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="v-parcela">Parcela (m²) <span class="required">*</span></label>
+              <input id="v-parcela" type="number" min="1" class="form-control" formControlName="villaParcelaM2" [class.invalid]="esInvalido(formInmueble.controls.villaParcelaM2)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="v-urb">Urbanización <span class="required">*</span></label>
+              <input id="v-urb" type="text" class="form-control" formControlName="villaUrbanizacion" [class.invalid]="esInvalido(formInmueble.controls.villaUrbanizacion)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="v-hab">Habitaciones <span class="required">*</span></label>
+              <input id="v-hab" type="number" min="1" class="form-control" formControlName="villaHabitaciones" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="v-banos">Baños <span class="required">*</span></label>
+              <input id="v-banos" type="number" min="1" class="form-control" formControlName="villaBanos" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="v-coc">Cocinas <span class="required">*</span></label>
+              <input id="v-coc" type="number" min="1" class="form-control" formControlName="villaCocinas" />
+            </div>
+          </div>
+        } @else if (formInmueble.controls.tipo.value === 'Local comercial') {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="l-acc">Número de accesos <span class="required">*</span></label>
+              <input id="l-acc" type="number" min="1" class="form-control" formControlName="localAccesos" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="l-acond">Acondicionamiento <span class="required">*</span></label>
+              <select id="l-acond" class="form-control" formControlName="localAcondicionamiento">
+                @for (cond of condicionesLocal; track cond) {
+                  <option [value]="cond">{{ cond }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="l-alt">Altillo (m²)</label>
+              <input id="l-alt" type="number" min="0" class="form-control" formControlName="localAltilloM2" />
+            </div>
+            <div class="form-group full-width" style="flex-direction: row; gap: 1.5rem; flex-wrap: wrap;">
+              <label class="checkbox-row"><input type="checkbox" formControlName="localVado" /> Dispone de vado</label>
+              <label class="checkbox-row"><input type="checkbox" formControlName="localAguaYLuz" /> Agua y luz instalados</label>
+              <label class="checkbox-row"><input type="checkbox" formControlName="localEsquinero" /> Local esquinero</label>
+            </div>
+          </div>
+        } @else if (formInmueble.controls.tipo.value === 'Casa') {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="c-plantas">Plantas <span class="required">*</span></label>
+              <input id="c-plantas" type="number" min="1" class="form-control" formControlName="casaPlantas" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-hab">Habitaciones <span class="required">*</span></label>
+              <input id="c-hab" type="number" min="1" class="form-control" formControlName="casaHabitaciones" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-banos">Baños <span class="required">*</span></label>
+              <input id="c-banos" type="number" min="1" class="form-control" formControlName="casaBanos" />
+            </div>
+            <div class="form-group full-width" style="flex-direction: row; gap: 1.5rem;">
+              <label class="checkbox-row"><input type="checkbox" formControlName="casaGaraje" /> Incluye garaje</label>
+              <label class="checkbox-row"><input type="checkbox" formControlName="casaPatio" /> Incluye patio</label>
+            </div>
+          </div>
+        } @else if (formInmueble.controls.tipo.value === 'Departamento') {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="d-piso">Número de piso <span class="required">*</span></label>
+              <input id="d-piso" type="number" min="0" class="form-control" formControlName="deptoPiso" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="d-hab">Habitaciones <span class="required">*</span></label>
+              <input id="d-hab" type="number" min="1" class="form-control" formControlName="deptoHabitaciones" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="d-banos">Baños <span class="required">*</span></label>
+              <input id="d-banos" type="number" min="1" class="form-control" formControlName="deptoBanos" />
+            </div>
+            <div class="form-group full-width" style="flex-direction: row; gap: 1.5rem;">
+              <label class="checkbox-row"><input type="checkbox" formControlName="deptoAscensor" /> Edificio con ascensor</label>
+              <label class="checkbox-row"><input type="checkbox" formControlName="deptoParqueadero" /> Incluye parqueadero</label>
+            </div>
+          </div>
+        } @else {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="o-amb">Ambientes <span class="required">*</span></label>
+              <input id="o-amb" type="number" min="1" class="form-control" formControlName="oficinaAmbientes" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="o-piso">Piso <span class="required">*</span></label>
+              <input id="o-piso" type="number" min="0" class="form-control" formControlName="oficinaPiso" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="o-banos">Baños <span class="required">*</span></label>
+              <input id="o-banos" type="number" min="1" class="form-control" formControlName="oficinaBanos" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="o-parq">Parqueaderos</label>
+              <input id="o-parq" type="number" min="0" class="form-control" formControlName="oficinaParqueaderos" />
+            </div>
+            <div class="form-group full-width">
+              <label class="checkbox-row"><input type="checkbox" formControlName="oficinaSalaReuniones" /> Dispone de sala de reuniones</label>
+            </div>
+          </div>
+        }
+
+        @if (formInmueble.controls.tipo.value !== 'Local comercial') {
+          <div class="form-group" style="margin-top: 0.75rem;">
+            <span class="form-label">Equipamiento</span>
+            <div class="chips-wrap">
+              @for (eq of equipamientosOpciones; track eq) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.selected]="equipamientoSeleccionado().includes(eq)"
+                  (click)="toggleEquipamiento(eq)"
+                >
+                  {{ eq }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <h4 class="form-section-title">4. Propietario, oficinas y fotografías</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="inm-prop">Propietario <span class="required">*</span></label>
+            <select id="inm-prop" class="form-control" formControlName="propietarioId" [class.invalid]="esInvalido(formInmueble.controls.propietarioId)">
+              <option value="">Seleccione...</option>
+              @for (p of service.propietarios(); track p.id) {
+                <option [value]="p.id">{{ p.nombreCompleto }} ({{ p.identificacion }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-ofir">Oficina responsable <span class="required">*</span></label>
+            <select id="inm-ofir" class="form-control" formControlName="oficinaResponsableId" [class.invalid]="esInvalido(formInmueble.controls.oficinaResponsableId)">
+              <option value="">Seleccione...</option>
+              @for (o of service.oficinas(); track o.id) {
+                <option [value]="o.id">{{ o.nombre }} ({{ o.ciudad }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inm-ofil">Custodia de llaves</label>
+            <select id="inm-ofil" class="form-control" formControlName="oficinaLlavesId">
+              <option value="">En poder del propietario</option>
+              @for (o of service.oficinas(); track o.id) {
+                <option [value]="o.id">{{ o.nombre }} ({{ o.ciudad }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="inm-img">Fotografía principal (URL o ruta local) <span class="required">*</span></label>
+            <div class="img-preview-row">
+              <input id="inm-img" type="text" class="form-control" formControlName="imagenPrincipal" placeholder="images/casa-1.svg o https://..." />
+              <img [src]="formInmueble.controls.imagenPrincipal.value || 'images/fallback-inmueble.svg'" alt="Vista previa" appImgFallback class="mini-preview" />
+            </div>
+            <span class="form-hint">Si la URL falla, se mostrará automáticamente la imagen alternativa.</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="inm-gal">Galería adicional (URLs separadas por coma)</label>
+            <input id="inm-gal" type="text" class="form-control" formControlName="galeriaTexto" placeholder="images/interior-sala.svg, images/interior-cocina.svg" />
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="modalInmueble.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">{{ editandoId() ? 'Guardar cambios' : 'Registrar inmueble' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ==================== MODAL PROPIETARIO ==================== -->
+@if (modalPropietario()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Formulario de propietario">
+    <div class="modal-panel modal-sm" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>{{ editandoId() ? 'Editar propietario' : 'Registrar propietario' }}</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="modalPropietario.set(false)">✕</button>
+      </div>
+      <form [formGroup]="formPropietario" (ngSubmit)="guardarPropietario()" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="p-id">Cédula / RUC <span class="required">*</span></label>
+            <input id="p-id" type="text" class="form-control" formControlName="identificacion" [class.invalid]="esInvalido(formPropietario.controls.identificacion)" />
+            @if (esInvalido(formPropietario.controls.identificacion)) {
+              <span class="form-error">Ingrese de 10 a 13 dígitos numéricos.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-tel">Teléfono <span class="required">*</span></label>
+            <input id="p-tel" type="text" class="form-control" formControlName="telefono" [class.invalid]="esInvalido(formPropietario.controls.telefono)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-nom">Nombres <span class="required">*</span></label>
+            <input id="p-nom" type="text" class="form-control" formControlName="nombres" [class.invalid]="esInvalido(formPropietario.controls.nombres)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-ape">Apellidos <span class="required">*</span></label>
+            <input id="p-ape" type="text" class="form-control" formControlName="apellidos" [class.invalid]="esInvalido(formPropietario.controls.apellidos)" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="p-mail">Correo electrónico <span class="required">*</span></label>
+            <input id="p-mail" type="email" class="form-control" formControlName="email" [class.invalid]="esInvalido(formPropietario.controls.email)" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="p-dir">Dirección <span class="required">*</span></label>
+            <input id="p-dir" type="text" class="form-control" formControlName="direccion" [class.invalid]="esInvalido(formPropietario.controls.direccion)" />
+          </div>
+        </div>
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="modalPropietario.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ==================== MODAL OFICINA ==================== -->
+@if (modalOficina()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Formulario de oficina">
+    <div class="modal-panel" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>{{ editandoId() ? 'Editar oficina' : 'Registrar oficina' }}</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="modalOficina.set(false)">✕</button>
+      </div>
+      <form [formGroup]="formOficina" (ngSubmit)="guardarOficina()" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="o-cod">Código <span class="required">*</span></label>
+            <input id="o-cod" type="text" class="form-control" formControlName="codigo" placeholder="Ej. SR-05" [class.invalid]="esInvalido(formOficina.controls.codigo)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="o-nom">Nombre <span class="required">*</span></label>
+            <input id="o-nom" type="text" class="form-control" formControlName="nombre" [class.invalid]="esInvalido(formOficina.controls.nombre)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="o-ciu">Ciudad <span class="required">*</span></label>
+            <input id="o-ciu" type="text" class="form-control" formControlName="ciudad" [class.invalid]="esInvalido(formOficina.controls.ciudad)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="o-can">Cantón <span class="required">*</span></label>
+            <input id="o-can" type="text" class="form-control" formControlName="canton" [class.invalid]="esInvalido(formOficina.controls.canton)" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="o-dir">Dirección <span class="required">*</span></label>
+            <input id="o-dir" type="text" class="form-control" formControlName="direccion" [class.invalid]="esInvalido(formOficina.controls.direccion)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="o-tel">Teléfono <span class="required">*</span></label>
+            <input id="o-tel" type="text" class="form-control" formControlName="telefono" [class.invalid]="esInvalido(formOficina.controls.telefono)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="o-mail">Correo electrónico <span class="required">*</span></label>
+            <input id="o-mail" type="email" class="form-control" formControlName="email" [class.invalid]="esInvalido(formOficina.controls.email)" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="o-enc">Responsable / Encargado <span class="required">*</span></label>
+            <input id="o-enc" type="text" class="form-control" formControlName="encargado" [class.invalid]="esInvalido(formOficina.controls.encargado)" />
+          </div>
+          <div class="form-group full-width">
+            <label class="checkbox-row"><input type="checkbox" formControlName="activa" /> Oficina operativa / activa</label>
+          </div>
+        </div>
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="modalOficina.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ==================== MODAL CLIENTE ==================== -->
+@if (modalCliente()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Formulario de cliente">
+    <div class="modal-panel" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>{{ editandoId() ? 'Editar cliente' : 'Registrar cliente' }}</h3>
+        <button type="button" class="btn btn-ghost btn-icon" (click)="modalCliente.set(false)">✕</button>
+      </div>
+      <form [formGroup]="formCliente" (ngSubmit)="guardarCliente()" class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="c-id">Cédula / RUC <span class="required">*</span></label>
+            <input id="c-id" type="text" class="form-control" formControlName="identificacion" [class.invalid]="esInvalido(formCliente.controls.identificacion)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-tel">Teléfono <span class="required">*</span></label>
+            <input id="c-tel" type="text" class="form-control" formControlName="telefono" [class.invalid]="esInvalido(formCliente.controls.telefono)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-nom">Nombres <span class="required">*</span></label>
+            <input id="c-nom" type="text" class="form-control" formControlName="nombres" [class.invalid]="esInvalido(formCliente.controls.nombres)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-ape">Apellidos <span class="required">*</span></label>
+            <input id="c-ape" type="text" class="form-control" formControlName="apellidos" [class.invalid]="esInvalido(formCliente.controls.apellidos)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-mail">Correo electrónico <span class="required">*</span></label>
+            <input id="c-mail" type="email" class="form-control" formControlName="email" [class.invalid]="esInvalido(formCliente.controls.email)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-pres">Presupuesto máximo ($)</label>
+            <input id="c-pres" type="number" min="0" class="form-control" formControlName="presupuestoMax" />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label" for="c-notas">Preferencias / Notas</label>
+            <textarea id="c-notas" rows="2" class="form-control" formControlName="notas"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="margin: 1.25rem -1.25rem -1.25rem;">
+          <button type="button" class="btn btn-secondary" (click)="modalCliente.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmacion() !== null"
+  [titulo]="confirmacion()?.titulo ?? 'Confirmar'"
+  [mensaje]="confirmacion()?.mensaje ?? ''"
+  detalle="Esta acción validará primero las relaciones existentes antes de eliminar."
+  textoConfirmar="Sí, eliminar"
+  (confirmar)="ejecutarEliminacion()"
+  (cancelar)="confirmacion.set(null)"
+/>

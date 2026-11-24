@@ -1,0 +1,318 @@
+<div class="page-container">
+  @if (inmueble(); as inm) {
+    <div class="breadcrumb">
+      <a routerLink="/catalogo">← Volver al catálogo</a>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <div class="detail-badges">
+          <span class="mono ref-pill">{{ inm.referencia }}</span>
+          <span class="badge" [class]="claseEstado(inm.disponibilidad)">{{ inm.disponibilidad }}</span>
+          <span class="badge" [class]="'badge-' + inm.modalidad.toLowerCase()">{{ inm.modalidad }}</span>
+          <span class="tipo-tag">{{ inm.tipo }}</span>
+        </div>
+        <h1 class="page-title">{{ inm.titulo }}</h1>
+        <p class="page-subtitle">
+          {{ inm.direccion }} · {{ inm.ciudad }}, cantón {{ inm.canton }} (Zona {{ inm.zona }})
+        </p>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-secondary" (click)="service.alternarFavorito(inm.id)">
+          {{ inm.esFavorito ? '★ En favoritos' : '☆ Guardar favorito' }}
+        </button>
+        <a [routerLink]="['/visitas']" [queryParams]="{ inmuebleId: inm.id }" class="btn btn-accent">
+          Programar visita
+        </a>
+        <a [routerLink]="['/reportes/ficha', inm.id]" class="btn btn-primary">
+          Ficha imprimible
+        </a>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Columna izquierda: Galería + Descripción + Características + Visitas -->
+      <div class="detail-main">
+        <section class="card gallery-card">
+          <div class="main-photo">
+            <img [src]="imagenActiva() || inm.imagenPrincipal" [alt]="inm.titulo" appImgFallback />
+          </div>
+
+          @if (inm.todasLasImagenes.length > 1) {
+            <div class="thumbs-row" role="list" aria-label="Galería de imágenes">
+              @for (img of inm.todasLasImagenes; track img; let i = $index) {
+                <button
+                  type="button"
+                  class="thumb-btn"
+                  [class.active]="(imagenActiva() || inm.imagenPrincipal) === img"
+                  (click)="seleccionarImagen(img)"
+                  [attr.aria-label]="'Ver imagen ' + (i + 1)"
+                >
+                  <img [src]="img" [alt]="inm.titulo + ' vista ' + (i + 1)" appImgFallback />
+                </button>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Descripción general</h2>
+          <p class="desc-text">{{ inm.descripcion }}</p>
+
+          <h3 class="section-sub">Características particulares ({{ inm.tipo }})</h3>
+
+          <div class="specs-grid">
+            <div class="spec-item">
+              <span class="spec-label">Superficie construida</span>
+              <strong>{{ inm.superficieM2 }} m²</strong>
+            </div>
+
+            @if (inm.tipo === 'Villa' && inm.caracteristicas.villa; as v) {
+              <div class="spec-item">
+                <span class="spec-label">Parcela</span>
+                <strong>{{ v.parcelaM2 }} m²</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Urbanización</span>
+                <strong>{{ v.urbanizacion }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Habitaciones</span>
+                <strong>{{ v.habitaciones }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Baños</span>
+                <strong>{{ v.banos }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Cocinas</span>
+                <strong>{{ v.cocinas }}</strong>
+              </div>
+            }
+
+            @if (inm.tipo === 'Local comercial' && inm.caracteristicas.local; as l) {
+              <div class="spec-item">
+                <span class="spec-label">Número de accesos</span>
+                <strong>{{ l.numeroAccesos }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Acondicionamiento</span>
+                <strong>{{ l.acondicionamiento }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Altillo</span>
+                <strong>{{ l.altilloM2 ? l.altilloM2 + ' m²' : 'No dispone' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Vado / Acceso vehicular</span>
+                <strong>{{ l.vado ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Servicios agua y luz</span>
+                <strong>{{ l.aguaYLuz ? 'Instalados' : 'Pendientes' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Ubicación esquinera</span>
+                <strong>{{ l.esquinero ? 'Sí' : 'No' }}</strong>
+              </div>
+            }
+
+            @if (inm.tipo === 'Casa' && inm.caracteristicas.casa; as c) {
+              <div class="spec-item">
+                <span class="spec-label">Plantas</span>
+                <strong>{{ c.plantas }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Habitaciones</span>
+                <strong>{{ c.habitaciones }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Baños</span>
+                <strong>{{ c.banos }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Garaje</span>
+                <strong>{{ c.garaje ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Patio</span>
+                <strong>{{ c.patio ? 'Sí' : 'No' }}</strong>
+              </div>
+            }
+
+            @if (inm.tipo === 'Departamento' && inm.caracteristicas.departamento; as d) {
+              <div class="spec-item">
+                <span class="spec-label">Piso</span>
+                <strong>{{ d.piso }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Habitaciones</span>
+                <strong>{{ d.habitaciones }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Baños</span>
+                <strong>{{ d.banos }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Ascensor</span>
+                <strong>{{ d.ascensor ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Parqueadero</span>
+                <strong>{{ d.parqueadero ? 'Sí' : 'No' }}</strong>
+              </div>
+            }
+
+            @if (inm.tipo === 'Oficina' && inm.caracteristicas.oficina; as o) {
+              <div class="spec-item">
+                <span class="spec-label">Ambientes</span>
+                <strong>{{ o.ambientes }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Piso</span>
+                <strong>{{ o.piso }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Baños</span>
+                <strong>{{ o.banos }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Sala de reuniones</span>
+                <strong>{{ o.salaReuniones ? 'Sí' : 'No' }}</strong>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Parqueaderos</span>
+                <strong>{{ o.parqueaderos }}</strong>
+              </div>
+            }
+          </div>
+
+          @if (inm.equipamientoLista.length > 0) {
+            <div style="margin-top: 1rem;">
+              <span class="spec-label" style="display: block; margin-bottom: 0.45rem;">Equipamiento incluido</span>
+              <div class="chips-wrap">
+                @for (eq of inm.equipamientoLista; track eq) {
+                  <span class="chip chip-static">{{ eq }}</span>
+                }
+              </div>
+            </div>
+          }
+        </section>
+
+        <!-- Historial de visitas del inmueble -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">Historial de visitas ({{ visitas().length }})</h2>
+            <a [routerLink]="['/visitas']" [queryParams]="{ inmuebleId: inm.id }" class="btn btn-secondary btn-sm">
+              + Agendar visita
+            </a>
+          </div>
+
+          @if (visitas().length > 0) {
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Fecha y hora</th>
+                    <th>Cliente interesado</th>
+                    <th>Estado</th>
+                    <th>Observaciones / Impresión</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (v of visitas(); track v.id) {
+                    <tr>
+                      <td><strong>{{ v.fecha }}</strong> · {{ v.hora }}</td>
+                      <td>{{ nombreCliente(v.clienteId) }}</td>
+                      <td>
+                        <span class="badge" [class]="claseEstado(v.estado)">{{ v.estado }}</span>
+                      </td>
+                      <td>{{ v.comentario || 'Sin observaciones registradas.' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p style="margin: 0; color: var(--slate-500);">
+              Este inmueble aún no registra visitas programadas o realizadas.
+            </p>
+          }
+        </section>
+      </div>
+
+      <!-- Columna derecha: Precios, Oficinas/Llaves y Propietario -->
+      <aside class="detail-side">
+        <section class="card price-panel">
+          <h2 class="card-title">Condiciones económicas</h2>
+          <div class="price-rows">
+            @if (inm.precioVenta !== null) {
+              <div class="price-box">
+                <span>Precio de venta</span>
+                <strong class="price-text">{{ inm.precioVenta | precioEc }}</strong>
+              </div>
+            }
+            @if (inm.precioAlquiler !== null) {
+              <div class="price-box">
+                <span>Canon mensual de alquiler</span>
+                <strong class="price-text">{{ inm.precioAlquiler | precioEc:'/mes' }}</strong>
+              </div>
+            }
+          </div>
+          <small style="color: var(--slate-500);">Registrado el {{ inm.fechaRegistro }}</small>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Gestión de oficina y llaves</h2>
+
+          <div class="info-block">
+            <span class="info-tag">Oficina responsable</span>
+            @if (oficinaResponsable(); as ofi) {
+              <strong>{{ ofi.nombre }} ({{ ofi.codigo }})</strong>
+              <span>{{ ofi.ciudad }} · {{ ofi.direccion }}</span>
+              <span>Encargado: {{ ofi.encargado }}</span>
+              <span>Tel.: {{ ofi.telefono }}</span>
+            }
+          </div>
+
+          <div class="info-block keys-block">
+            <span class="info-tag">Ubicación de las llaves</span>
+            @if (oficinaLlaves(); as ofiL) {
+              <strong>{{ ofiL.nombre }}</strong>
+              <span>{{ ofiL.ciudad }} · {{ ofiL.direccion }}</span>
+              <span>Tel.: {{ ofiL.telefono }}</span>
+              @if (ofiL.id !== inm.oficinaResponsableId) {
+                <span class="badge badge-reprogramada" style="width: fit-content; margin-top: 0.2rem;">
+                  Custodiadas en otra sucursal
+                </span>
+              }
+            } @else {
+              <strong>En poder del propietario</strong>
+              <span>Coordinar entrega directa antes de la visita.</span>
+            }
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Datos del propietario</h2>
+          @if (propietario(); as prop) {
+            <div class="info-block">
+              <strong>{{ prop.nombreCompleto }}</strong>
+              <span>ID: {{ prop.identificacion }}</span>
+              <span>Teléfono: {{ prop.telefono }}</span>
+              <span>Correo: {{ prop.email }}</span>
+              <span>Dirección: {{ prop.direccion }}</span>
+            </div>
+          }
+        </section>
+      </aside>
+    </div>
+  } @else {
+    <div class="empty-state" style="max-width: 540px; margin: 2.5rem auto;">
+      <h3>Inmueble no encontrado</h3>
+      <p>El registro solicitado no existe o fue eliminado del inventario.</p>
+      <a routerLink="/catalogo" class="btn btn-primary">Volver al catálogo</a>
+    </div>
+  }
+</div>

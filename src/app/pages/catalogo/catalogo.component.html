@@ -1,0 +1,550 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Catálogo y Consultas Avanzadas</h1>
+      <p class="page-subtitle">
+        Explore propiedades con filtros combinables, vista de tarjetas o tabla, favoritos y búsqueda en tiempo real.
+      </p>
+    </div>
+    <div class="header-actions">
+      <div class="view-switcher" role="group" aria-label="Tipo de presentación">
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="vista() === 'tarjetas'"
+          [class.btn-secondary]="vista() !== 'tarjetas'"
+          (click)="vista.set('tarjetas')"
+        >
+          Tarjetas
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="vista() === 'tabla'"
+          [class.btn-secondary]="vista() !== 'tabla'"
+          (click)="vista.set('tabla')"
+        >
+          Tabla
+        </button>
+      </div>
+      <a routerLink="/mantenimiento" class="btn btn-accent">+ Nuevo inmueble</a>
+    </div>
+  </div>
+
+  <!-- Casos rápidos de demostración (Sección 7) -->
+  <section class="presets-bar card" aria-label="Consultas rápidas de demostración">
+    <div class="presets-head">
+      <span class="presets-title">Casos de consulta rápida:</span>
+      <div class="chips-wrap">
+        <button type="button" class="chip" (click)="aplicarCasoCasasMachala()">
+          Casas venta Machala ($80k–$150k)
+        </button>
+        <button type="button" class="chip" (click)="aplicarCasoVillasSuperficie()">
+          Villas ≥ 220 m² con piscina
+        </button>
+        <button type="button" class="chip" (click)="aplicarCasoAlquilerOrdenado()">
+          Disponibles alquiler (canon ↑)
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.selected]="filtros().soloFavoritos"
+          (click)="actualizarFiltro('soloFavoritos', !filtros().soloFavoritos)"
+        >
+          ★ Solo favoritos
+        </button>
+      </div>
+    </div>
+
+    @if (service.filtrosGuardados().length > 0) {
+      <div class="saved-filters-row">
+        <span class="presets-title">Filtros guardados:</span>
+        <div class="chips-wrap">
+          @for (fg of service.filtrosGuardados(); track fg.id) {
+            <span class="saved-chip">
+              <button type="button" class="saved-chip-apply" (click)="aplicarFiltroGuardado(fg)">
+                {{ fg.nombre }}
+              </button>
+              <button
+                type="button"
+                class="saved-chip-del"
+                (click)="eliminarFiltroGuardado(fg.id)"
+                aria-label="Eliminar filtro guardado"
+              >
+                ✕
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Panel de Consultas Avanzadas (RF-07) -->
+  <section class="card filters-card" aria-label="Filtros combinables">
+    <div class="filters-top">
+      <div class="search-box">
+        <label class="form-label" for="busqueda">Búsqueda textual</label>
+        <input
+          id="busqueda"
+          type="search"
+          class="form-control"
+          placeholder="Buscar por referencia, título, dirección, urbanización o propietario..."
+          [ngModel]="filtros().busqueda"
+          (ngModelChange)="actualizarFiltro('busqueda', $event)"
+        />
+      </div>
+
+      <div class="sort-box">
+        <label class="form-label" for="orden">Ordenar por</label>
+        <select
+          id="orden"
+          class="form-control"
+          [ngModel]="filtros().orden"
+          (ngModelChange)="cambiarOrden($event)"
+        >
+          <option value="referencia-asc">Referencia (A–Z)</option>
+          <option value="precio-asc">Precio principal (menor a mayor)</option>
+          <option value="precio-desc">Precio principal (mayor a menor)</option>
+          <option value="alquiler-asc">Canon alquiler (menor a mayor)</option>
+          <option value="alquiler-desc">Canon alquiler (mayor a menor)</option>
+          <option value="superficie-asc">Superficie m² (menor a mayor)</option>
+          <option value="superficie-desc">Superficie m² (mayor a menor)</option>
+        </select>
+      </div>
+
+      <div class="filter-toggle-btns">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="filtrosAvanzadosAbiertos.set(!filtrosAvanzadosAbiertos())"
+        >
+          {{ filtrosAvanzadosAbiertos() ? 'Ocultar filtros' : 'Mostrar filtros' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="limpiarFiltros()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    @if (filtrosAvanzadosAbiertos()) {
+      <div class="advanced-grid">
+        <div class="form-group">
+          <label class="form-label" for="f-ciudad">Ciudad</label>
+          <select
+            id="f-ciudad"
+            class="form-control"
+            [ngModel]="filtros().ciudad"
+            (ngModelChange)="actualizarFiltro('ciudad', $event)"
+          >
+            <option value="">Todas las ciudades</option>
+            @for (c of service.ciudadesDisponibles(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-canton">Cantón</label>
+          <select
+            id="f-canton"
+            class="form-control"
+            [ngModel]="filtros().canton"
+            (ngModelChange)="actualizarFiltro('canton', $event)"
+          >
+            <option value="">Todos los cantones</option>
+            @for (c of service.cantonesDisponibles(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-zona">Zona</label>
+          <input
+            id="f-zona"
+            type="text"
+            class="form-control"
+            placeholder="Ej. Norte, Centro, Las Palmas"
+            [ngModel]="filtros().zona"
+            (ngModelChange)="actualizarFiltro('zona', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-tipo">Tipo de inmueble</label>
+          <select
+            id="f-tipo"
+            class="form-control"
+            [ngModel]="filtros().tipo"
+            (ngModelChange)="actualizarFiltro('tipo', $event)"
+          >
+            <option value="">Todos los tipos</option>
+            @for (t of tipos; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-modalidad">Modalidad</label>
+          <select
+            id="f-modalidad"
+            class="form-control"
+            [ngModel]="filtros().modalidad"
+            (ngModelChange)="actualizarFiltro('modalidad', $event)"
+          >
+            <option value="">Todas</option>
+            @for (m of modalidades; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-disp">Disponibilidad</label>
+          <select
+            id="f-disp"
+            class="form-control"
+            [ngModel]="filtros().disponibilidad"
+            (ngModelChange)="actualizarFiltro('disponibilidad', $event)"
+          >
+            <option value="">Todos los estados</option>
+            @for (e of estados; track e) {
+              <option [value]="e">{{ e }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-pmin">Precio mínimo ($)</label>
+          <input
+            id="f-pmin"
+            type="number"
+            min="0"
+            class="form-control"
+            placeholder="0"
+            [ngModel]="filtros().precioMin"
+            (ngModelChange)="actualizarNumeroFiltro('precioMin', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-pmax">Precio máximo ($)</label>
+          <input
+            id="f-pmax"
+            type="number"
+            min="0"
+            class="form-control"
+            placeholder="Sin límite"
+            [ngModel]="filtros().precioMax"
+            (ngModelChange)="actualizarNumeroFiltro('precioMax', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-smin">Superficie mín. (m²)</label>
+          <input
+            id="f-smin"
+            type="number"
+            min="0"
+            class="form-control"
+            placeholder="0"
+            [ngModel]="filtros().superficieMin"
+            (ngModelChange)="actualizarNumeroFiltro('superficieMin', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-smax">Superficie máx. (m²)</label>
+          <input
+            id="f-smax"
+            type="number"
+            min="0"
+            class="form-control"
+            placeholder="Sin límite"
+            [ngModel]="filtros().superficieMax"
+            (ngModelChange)="actualizarNumeroFiltro('superficieMax', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-hab">Hab. / Amb. mín.</label>
+          <input
+            id="f-hab"
+            type="number"
+            min="0"
+            class="form-control"
+            placeholder="Cualquiera"
+            [ngModel]="filtros().habitacionesMin"
+            (ngModelChange)="actualizarNumeroFiltro('habitacionesMin', $event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-eq">Equipamiento</label>
+          <select
+            id="f-eq"
+            class="form-control"
+            [ngModel]="filtros().equipamiento"
+            (ngModelChange)="actualizarFiltro('equipamiento', $event)"
+          >
+            <option value="">Cualquier equipamiento</option>
+            @for (eq of equipamientos; track eq) {
+              <option [value]="eq">{{ eq }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="f-ofi">Oficina / Llaves</label>
+          <select
+            id="f-ofi"
+            class="form-control"
+            [ngModel]="filtros().oficinaId"
+            (ngModelChange)="actualizarFiltro('oficinaId', $event)"
+          >
+            <option value="">Todas las oficinas</option>
+            @for (ofi of service.oficinas(); track ofi.id) {
+              <option [value]="ofi.id">{{ ofi.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group save-filter-box">
+          <label class="form-label" for="f-save-name">Guardar combinación actual</label>
+          <div class="save-filter-inline">
+            <input
+              id="f-save-name"
+              type="text"
+              class="form-control"
+              placeholder="Nombre del filtro..."
+              [ngModel]="nombreNuevoFiltro()"
+              (ngModelChange)="nombreNuevoFiltro.set($event)"
+            />
+            <button type="button" class="btn btn-secondary btn-sm" (click)="guardarFiltroActual()">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Barra de resultados y tamaño de página -->
+  <div class="results-toolbar">
+    <span class="results-count">{{ rangoMostrado() }}</span>
+    <div class="page-size-wrap">
+      <label for="page-size">Por página:</label>
+      <select
+        id="page-size"
+        class="form-control page-size-select"
+        [ngModel]="tamanioPagina()"
+        (ngModelChange)="cambiarTamanioPagina($event)"
+      >
+        <option [value]="6">6</option>
+        <option [value]="9">9</option>
+        <option [value]="12">12</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  @if (resultados().length === 0) {
+    <div class="empty-state">
+      <h3>No se encontraron inmuebles</h3>
+      <p>Pruebe ampliando el rango de precios, cambiando la ciudad o limpiando los filtros activos.</p>
+      <button type="button" class="btn btn-primary" (click)="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+  } @else if (vista() === 'tarjetas') {
+    <section class="catalog-grid" aria-label="Catálogo visual de inmuebles">
+      @for (inm of inmueblesPaginados(); track inm.id) {
+        <article class="property-card">
+          <div class="property-media">
+            <img
+              [src]="inm.imagenPrincipal"
+              [alt]="inm.titulo"
+              appImgFallback
+              loading="lazy"
+            />
+            <span class="ref-tag mono">{{ inm.referencia }}</span>
+            <span class="badge status-tag" [class]="claseDisponibilidad(inm.disponibilidad)">
+              {{ inm.disponibilidad }}
+            </span>
+            <button
+              type="button"
+              class="fav-btn"
+              [class.active]="inm.esFavorito"
+              (click)="service.alternarFavorito(inm.id)"
+              [attr.aria-label]="inm.esFavorito ? 'Quitar de favoritos' : 'Marcar como favorito'"
+              title="Favorito"
+            >
+              {{ inm.esFavorito ? '★' : '☆' }}
+            </button>
+          </div>
+
+          <div class="property-body">
+            <div class="property-meta-top">
+              <span class="tipo-pill">{{ inm.tipo }}</span>
+              <span class="badge" [class]="claseModalidad(inm.modalidad)">{{ inm.modalidad }}</span>
+            </div>
+
+            <h3 class="property-title">
+              <a [routerLink]="['/catalogo', inm.id]">{{ inm.titulo }}</a>
+            </h3>
+
+            <p class="property-location">
+              {{ inm.ciudad }} · Cantón {{ inm.canton }} · Zona {{ inm.zona }}
+            </p>
+
+            <div class="property-specs">
+              @for (spec of inm.resumenCaracteristicas().slice(0, 4); track spec) {
+                <span class="spec-chip">{{ spec }}</span>
+              }
+            </div>
+
+            <div class="property-office-info">
+              <span><strong>Oficina:</strong> {{ nombreOficina(inm.oficinaResponsableId) }}</span>
+              <span><strong>Llaves:</strong> {{ nombreOficina(inm.oficinaLlavesId) }}</span>
+            </div>
+
+            <div class="property-footer">
+              <div class="property-prices">
+                @if (inm.precioVenta !== null) {
+                  <div class="price-main price-text">{{ inm.precioVenta | precioEc }}</div>
+                }
+                @if (inm.precioAlquiler !== null) {
+                  <div [class]="inm.precioVenta !== null ? 'price-sub' : 'price-main price-text'">
+                    {{ inm.precioAlquiler | precioEc:'/mes' }}
+                  </div>
+                }
+              </div>
+
+              <div class="card-actions">
+                <a [routerLink]="['/catalogo', inm.id]" class="btn btn-primary btn-sm">Ver detalle</a>
+                <a [routerLink]="['/reportes/ficha', inm.id]" class="btn btn-secondary btn-sm" title="Ficha imprimible">
+                  Ficha
+                </a>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+  } @else {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ref.</th>
+            <th>Inmueble</th>
+            <th>Tipo</th>
+            <th>Ubicación</th>
+            <th>Superficie</th>
+            <th>Modalidad / Precios</th>
+            <th>Oficina / Llaves</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inm of inmueblesPaginados(); track inm.id) {
+            <tr>
+              <td class="mono"><strong>{{ inm.referencia }}</strong></td>
+              <td>
+                <div class="table-prop-cell">
+                  <img
+                    [src]="inm.imagenPrincipal"
+                    [alt]="inm.titulo"
+                    appImgFallback
+                    class="table-thumb"
+                  />
+                  <div>
+                    <a [routerLink]="['/catalogo', inm.id]" class="table-prop-title">{{ inm.titulo }}</a>
+                    <div class="table-prop-sub">{{ inm.direccion }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ inm.tipo }}</td>
+              <td>
+                <div>{{ inm.ciudad }}</div>
+                <small style="color: var(--slate-500);">{{ inm.canton }} · {{ inm.zona }}</small>
+              </td>
+              <td><strong>{{ inm.superficieM2 }} m²</strong></td>
+              <td>
+                <span class="badge" [class]="claseModalidad(inm.modalidad)">{{ inm.modalidad }}</span>
+                <div style="margin-top: 0.25rem;">
+                  @if (inm.precioVenta !== null) {
+                    <div class="price-text">{{ inm.precioVenta | precioEc }}</div>
+                  }
+                  @if (inm.precioAlquiler !== null) {
+                    <div class="price-text" style="font-size: 0.82rem;">{{ inm.precioAlquiler | precioEc:'/mes' }}</div>
+                  }
+                </div>
+              </td>
+              <td>
+                <div style="font-size: 0.82rem;"><strong>Resp.:</strong> {{ nombreOficina(inm.oficinaResponsableId) }}</div>
+                <div style="font-size: 0.8rem; color: var(--slate-500);"><strong>Llaves:</strong> {{ nombreOficina(inm.oficinaLlavesId) }}</div>
+              </td>
+              <td>
+                <span class="badge" [class]="claseDisponibilidad(inm.disponibilidad)">
+                  {{ inm.disponibilidad }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-icon"
+                    (click)="service.alternarFavorito(inm.id)"
+                    [title]="inm.esFavorito ? 'Quitar favorito' : 'Marcar favorito'"
+                  >
+                    {{ inm.esFavorito ? '★' : '☆' }}
+                  </button>
+                  <a [routerLink]="['/catalogo', inm.id]" class="btn btn-primary btn-sm">Detalle</a>
+                  <a [routerLink]="['/reportes/ficha', inm.id]" class="btn btn-secondary btn-sm">Ficha</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Paginación (RF-03) -->
+  @if (totalPaginas() > 1) {
+    <nav class="pagination" aria-label="Paginación de inmuebles">
+      <span class="results-count">Página {{ paginaSegura() }} de {{ totalPaginas() }}</span>
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          [disabled]="paginaSegura() === 1"
+          (click)="irAPagina(paginaSegura() - 1)"
+        >
+          ← Anterior
+        </button>
+        @for (p of paginasArray(); track p) {
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-primary]="p === paginaSegura()"
+            [class.btn-secondary]="p !== paginaSegura()"
+            (click)="irAPagina(p)"
+          >
+            {{ p }}
+          </button>
+        }
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          [disabled]="paginaSegura() === totalPaginas()"
+          (click)="irAPagina(paginaSegura() + 1)"
+        >
+          Siguiente →
+        </button>
+      </div>
+    </nav>
+  }
+</div>

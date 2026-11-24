@@ -1,0 +1,142 @@
+<div class="page-container">
+  <div class="ficha-toolbar no-print">
+    <a routerLink="/reportes" class="btn btn-secondary">← Volver a reportes</a>
+    @if (inmueble(); as inm) {
+      <div style="display: flex; gap: 0.5rem;">
+        <a [routerLink]="['/catalogo', inm.id]" class="btn btn-secondary">Ver en catálogo</a>
+        <button type="button" class="btn btn-primary" (click)="imprimir()">Imprimir / Guardar PDF</button>
+      </div>
+    }
+  </div>
+
+  @if (inmueble(); as inm) {
+    <article class="card print-sheet">
+      <header class="ficha-header">
+        <div>
+          <div class="ficha-brand">INMOGESTIÓN 360 · FICHA TÉCNICA DE INMUEBLE</div>
+          <h1>{{ inm.titulo }}</h1>
+          <p class="ficha-address">
+            {{ inm.direccion }} · {{ inm.ciudad }}, cantón {{ inm.canton }} · Zona {{ inm.zona }}
+          </p>
+        </div>
+        <div class="ficha-ref-box">
+          <span class="mono">{{ inm.referencia }}</span>
+          <small>Emitido: {{ fechaEmision }}</small>
+        </div>
+      </header>
+
+      <section class="ficha-media-grid">
+        <div class="ficha-main-img">
+          <img [src]="inm.imagenPrincipal" [alt]="inm.titulo" appImgFallback />
+        </div>
+        <div class="ficha-key-facts">
+          <div class="fact-row"><span>Tipo de inmueble</span><strong>{{ inm.tipo }}</strong></div>
+          <div class="fact-row"><span>Superficie</span><strong>{{ inm.superficieM2 }} m²</strong></div>
+          <div class="fact-row"><span>Modalidad</span><strong>{{ inm.modalidad }}</strong></div>
+          <div class="fact-row"><span>Disponibilidad</span><strong>{{ inm.disponibilidad }}</strong></div>
+          @if (inm.precioVenta !== null) {
+            <div class="fact-row highlight">
+              <span>Precio de venta</span>
+              <strong class="price-text">{{ inm.precioVenta | precioEc }}</strong>
+            </div>
+          }
+          @if (inm.precioAlquiler !== null) {
+            <div class="fact-row highlight">
+              <span>Canon de alquiler</span>
+              <strong class="price-text">{{ inm.precioAlquiler | precioEc:'/mes' }}</strong>
+            </div>
+          }
+        </div>
+      </section>
+
+      @if (inm.galeria.length > 0) {
+        <section class="ficha-section">
+          <h2>Galería fotográfica</h2>
+          <div class="ficha-gallery">
+            @for (img of inm.galeria; track img; let i = $index) {
+              <img [src]="img" [alt]="inm.titulo + ' galería ' + (i + 1)" appImgFallback />
+            }
+          </div>
+        </section>
+      }
+
+      <section class="ficha-section">
+        <h2>Descripción y características particulares</h2>
+        <p>{{ inm.descripcion }}</p>
+        <div class="ficha-tags">
+          @for (item of inm.resumenCaracteristicas(); track item) {
+            <span class="ficha-tag">{{ item }}</span>
+          }
+          @for (eq of inm.equipamientoLista; track eq) {
+            <span class="ficha-tag ficha-tag-eq">{{ eq }}</span>
+          }
+        </div>
+      </section>
+
+      <section class="ficha-two-col">
+        <div class="ficha-box">
+          <h2>Propietario</h2>
+          @if (propietario(); as p) {
+            <p><strong>{{ p.nombreCompleto }}</strong></p>
+            <p>Identificación: {{ p.identificacion }}</p>
+            <p>Teléfono: {{ p.telefono }}</p>
+            <p>Correo: {{ p.email }}</p>
+            <p>Dirección: {{ p.direccion }}</p>
+          }
+        </div>
+
+        <div class="ficha-box">
+          <h2>Oficina responsable y llaves</h2>
+          @if (oficinaResponsable(); as o) {
+            <p><strong>Responsable:</strong> {{ o.nombre }} ({{ o.codigo }})</p>
+            <p>{{ o.ciudad }} · {{ o.direccion }}</p>
+            <p>Encargado: {{ o.encargado }} · Tel.: {{ o.telefono }}</p>
+          }
+          <hr class="ficha-divider" />
+          @if (oficinaLlaves(); as ol) {
+            <p><strong>Custodia de llaves:</strong> {{ ol.nombre }} ({{ ol.ciudad }})</p>
+            <p>{{ ol.direccion }} · Tel.: {{ ol.telefono }}</p>
+          } @else {
+            <p><strong>Custodia de llaves:</strong> En poder del propietario</p>
+          }
+        </div>
+      </section>
+
+      <section class="ficha-section">
+        <h2>Registro de visitas ({{ visitas().length }})</h2>
+        @if (visitas().length > 0) {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Cliente interesado</th>
+                <th>Estado</th>
+                <th>Impresión / Observación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of visitas(); track v.id) {
+                <tr>
+                  <td>{{ v.fecha }}</td>
+                  <td>{{ v.hora }}</td>
+                  <td>{{ nombreCliente(v.clienteId) }}</td>
+                  <td>{{ v.estado }}</td>
+                  <td>{{ v.comentario || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p style="color: var(--slate-500);">Sin visitas registradas hasta la fecha.</p>
+        }
+      </section>
+    </article>
+  } @else {
+    <div class="empty-state">
+      <h3>No se encontró el inmueble</h3>
+      <p>Verifique la referencia seleccionada para generar la ficha.</p>
+      <a routerLink="/reportes" class="btn btn-primary">Volver a reportes</a>
+    </div>
+  }
+</div>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#e0f2fe"/>
+  <path d="M0,330 Q220,270 430,320 T800,310 L800,500 L0,500 Z" fill="#bbf7d0"/>
+  <!-- Luxury flat-roof villa -->
+  <rect x="140" y="220" width="520" height="150" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="120" y="210" width="560" height="16" fill="#132a46"/>
+  <rect x="220" y="130" width="360" height="82" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="200" y="118" width="400" height="15" fill="#1b7a6e"/>
+  <!-- Glass walls -->
+  <rect x="170" y="248" width="210" height="122" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>
+  <rect x="415" y="248" width="215" height="122" fill="#93c5fd" stroke="#1e293b" stroke-width="3"/>
+  <rect x="255" y="148" width="290" height="52" fill="#bae6fd" stroke="#1e293b" stroke-width="2"/>
+  <!-- Pool deck -->
+  <rect x="150" y="388" width="500" height="72" rx="10" fill="#0ea5e9" stroke="#f8fafc" stroke-width="6"/>
+</svg>
